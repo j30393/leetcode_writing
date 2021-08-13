@@ -3,34 +3,42 @@ using namespace std;
 class Solution {
 public:
     int networkDelayTime(vector<vector<int>>& times, int n, int k) {
-        vector<vector<pair<int,int>>> G;
-        G.reserve(n);
-        for(auto& edge: times)
-            G[edge[0] - 1].emplace_back(pair<int,int>(edge[1]-1,edge[2]));
-        k--;
-        vector<int> d(n,0x3f3f3f3f);
-        d[k] = 0;
-        priority_queue<pair<int,int>,vector<pair<int,int>>,greater<pair<int,int>>> pq;
-        pq.push(pair<int,int>(0,k));
-        int delaytime = -1;
+        
+        int answer = 0 , count = 0;
+        vector<pair<int,int> >adj[1000];
+        
+        for(auto it : times){
+            adj[it[0]].push_back({it[1],it[2]});
+        }
+               
+        unordered_set<int>st;
+        priority_queue<pair<int,int> , vector<pair<int,int> > , greater<pair<int,int> >> pq;
+        int dist[101]{0};
+        for(int i=0;i<=100;++i){
+            dist[i] = INT_MAX;
+        }
+        dist[k] = 0;
+        pq.push({0,k});
+        
         while(!pq.empty()){
-            int dist = pq.top().first;
-            int w = pq.top().second;
+            auto top = pq.top();
+            st.insert(top.second);
             pq.pop();
-            if(d[w] < dist){
-                continue;
-            }
-            delaytime = max(delaytime, d[w]);
-            --w;
-            for (auto& edge: G[w]) {
-                int v = edge.first;
-                if (d[v] > d[w] + edge.second) {
-                    d[v] = d[w] + edge.second;
-                    pq.push({d[v], v});
+            for(auto it : adj[top.second]){ // {vi,wi}
+                if(st.find(it.first) != st.end())
+                    continue;
+                if(dist[it.first] > dist[top.second]+it.second)
+                {
+                    dist[it.first] = dist[top.second] + it.second ;
+                    pq.push({dist[it.first],it.first});
                 }
             }
         }
-        return (!n) ? delaytime : -1;
+        
+        for(int i=1;i<=n;++i)
+            answer = max(answer,dist[i]);
+        
+        return (st.size() == n) ? answer : -1;
     }
 };
 int main(){
